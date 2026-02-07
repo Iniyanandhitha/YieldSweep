@@ -50,6 +50,38 @@ mod blend_interface {
 pub use blend_interface::BlendPoolClient;
 
 // =============================================================================
+// AQUARIUS PROTOCOL INTERFACE
+// =============================================================================
+
+/// Aquarius Protocol gauge/rewards interface
+/// This trait abstracts interactions with Aquarius gauges for earning AQUA rewards
+/// 
+/// For hackathon demo: Can use a mock implementation
+/// For production: Connect to real Aquarius gauges
+mod aquarius_interface {
+    use soroban_sdk::{contractclient, Address, Env};
+    
+    /// Simplified interface for Aquarius gauge operations
+    #[contractclient(name = "AquariusGaugeClient")]
+    pub trait AquariusGauge {
+        /// Deposit LP tokens or bTokens into the gauge to earn AQUA rewards
+        /// from: The address depositing tokens
+        /// amount: Amount of tokens to deposit
+        fn deposit(e: Env, from: Address, amount: i128);
+        
+        /// Withdraw tokens from the gauge and claim rewards
+        /// to: The address receiving the withdrawn tokens
+        /// amount: Amount of tokens to withdraw
+        fn withdraw(e: Env, to: Address, amount: i128);
+        
+        /// Get current deposited balance in the gauge
+        fn get_balance(e: Env, user: Address) -> i128;
+    }
+}
+
+pub use aquarius_interface::AquariusGaugeClient;
+
+// =============================================================================
 // ERROR DEFINITIONS
 // =============================================================================
 
@@ -108,6 +140,10 @@ pub struct ContractConfig {
     pub initialized: bool,
     /// Optional Blend lending pool address for yield generation
     pub blend_pool: Option<Address>,
+    /// Optional Aquarius gauge address for AQUA rewards
+    pub aqua_gauge: Option<Address>,
+    /// Optional bToken (receipt token from Blend, e.g., bUSDC) address
+    pub b_token: Option<Address>,
 }
 
 /// Per-user configuration and state
@@ -193,6 +229,8 @@ impl YieldSweepVault {
             admin: admin.clone(),
             initialized: true,
             blend_pool: None, // Not set initially
+            aqua_gauge: None, // Not set initially
+            b_token: None,    // Not set initially
         };
 
         e.storage().persistent().set(&DataKey::Config, &config);
@@ -250,6 +288,48 @@ impl YieldSweepVault {
         e.events().publish(
             (Symbol::new(&e, EVENT_BLEND_SET),),
             blend_pool,
+        );
+        
+        Ok(())
+    }
+
+    /// Set the Aquarius gauge address (admin only)
+    /// This enables liquid restaking by depositing bTokens into Aquarius for AQUA rewards
+    pub fn set_aqua_gauge(e: Env, aqua_gauge: Address) -> Result<(), YieldSweepError> {
+        let mut config = Self::require_initialized(&e)?;
+        
+        // Require admin authentication
+        config.admin.require_auth();
+        
+        // Update the Aquarius gauge address
+        config.aqua_gauge = Some(aqua_gauge.clone());
+        e.storage().persistent().set(&DataKey::Config, &config);
+        
+        // Emit event
+        e.events().publish(
+            (Symbol::new(&e, "aqua_gauge_set"),),
+            aqua_gauge,
+        );
+        
+        Ok(())
+    }
+
+    /// Set the bToken address (admin only)
+    /// This is the receipt token from Blend (e.g., bUSDC)
+    pub fn set_b_token(e: Env, b_token: Address) -> Result<(), YieldSweepError> {
+        let mut config = Self::require_initialized(&e)?;
+        
+        // Require admin authentication
+        config.admin.require_auth();
+        
+        // Update the bToken address
+        config.b_token = Some(b_token.clone());
+        e.storage().persistent().set(&DataKey::Config, &config);
+        
+        // Emit event
+        e.events().publish(
+            (Symbol::new(&e, "b_token_set"),),
+            b_token,
         );
         
         Ok(())
@@ -423,6 +503,137 @@ impl YieldSweepVault {
         );
 
         Ok(excess)
+    }
+
+    /// Atomic Liquid Restaking: Check balance and sweep to Blend + Aquarius
+    ///
+    /// This function performs the "Holy Grail" of DeFi composability:
+    /// 1. Checks if user balance exceeds safety limit
+    /// 2. Transfers excess USDC from user to contract
+    /// 3. Supplies USDC to Blend → Receives bUSDC (receipt tokens)
+    /// 4. Deposits bUSDC to Aquarius → Earns AQUA rewards
+    ///
+    /// All operations are atomic - either all succeed or all fail.
+    ///
+    /// # Arguments
+    /// * `e` - The Soroban environment
+    /// * `user` - The user's address (must authenticate)
+    ///
+    /// # Returns
+    /// * `Ok((swept_amount, b_tokens_received))` - Tuple of USDC swept and bTokens received
+    ///
+    /// # Errors
+    /// * `UserNotConfigured` - User hasn't set safety limit
+    /// * `NoExcessFunds` - Balance is at or below safety limit
+    /// * `BlendNotConfigured` - Blend pool not set
+    pub fn check_and_sweep(
+        e: Env,
+        user: Address,
+    ) -> Result<(i128, i128), YieldSweepError> {
+        // Ensure contract is initialized
+        let config = Self::require_initialized(&e)?;
+
+        // AUTHENTICATION: Verify the transaction was signed by the user
+        user.require_auth();
+
+        // Get user configuration
+        let mut user_config = e
+            .storage()
+            .persistent()
+            .get::<DataKey, UserConfig>(&DataKey::UserConfig(user.clone()))
+            .ok_or(YieldSweepError::UserNotConfigured)?;
+
+        // Check if Blend and Aquarius are configured
+        let blend_pool = config
+            .blend_pool
+            .as_ref()
+            .ok_or(YieldSweepError::BlendNotConfigured)?;
+        
+        let aqua_gauge = config
+            .aqua_gauge
+            .as_ref()
+            .ok_or(YieldSweepError::BlendNotConfigured)?; // Reusing error code for simplicity
+        
+        let b_token_addr = config
+            .b_token
+            .as_ref()
+            .ok_or(YieldSweepError::BlendNotConfigured)?;
+
+        // Get user's current wallet balance
+        let token_client = token::Client::new(&e, &config.token);
+        let current_balance = token_client.balance(&user);
+
+        // Check if there's excess to sweep
+        if current_balance <= user_config.safety_limit {
+            return Err(YieldSweepError::NoExcessFunds);
+        }
+
+        // Calculate sweep amount
+        let sweep_amount = current_balance
+            .checked_sub(user_config.safety_limit)
+            .ok_or(YieldSweepError::Overflow)?;
+
+        let vault_address = e.current_contract_address();
+
+        // STEP 1: Transfer USDC from user to contract
+        token_client.transfer_from(
+            &vault_address,
+            &user,
+            &vault_address,
+            &sweep_amount,
+        );
+
+        // STEP 2: Supply to Blend (Get bUSDC)
+        let blend_client = BlendPoolClient::new(&e, blend_pool);
+        
+        // Note: In Soroban, the contract itself needs to approve if it's spending its own tokens
+        // The transfer_from above already moved tokens to the contract
+        // Now we supply them to Blend
+        let b_tokens_minted = blend_client.supply(
+            &vault_address,
+            &config.token,
+            &sweep_amount,
+        );
+
+        // STEP 3: Deposit bTokens to Aquarius (Get AQUA rewards)
+        let aqua_client = AquariusGaugeClient::new(&e, aqua_gauge);
+        
+        // Deposit the bTokens we just received into Aquarius
+        aqua_client.deposit(
+            &vault_address,
+            &b_tokens_minted,
+        );
+
+        // Update user's deposited amount
+        user_config.deposited = user_config
+            .deposited
+            .checked_add(sweep_amount)
+            .ok_or(YieldSweepError::Overflow)?;
+
+        e.storage()
+            .persistent()
+            .set(&DataKey::UserConfig(user.clone()), &user_config);
+
+        // Update total vault deposits
+        let total_deposits: i128 = e
+            .storage()
+            .persistent()
+            .get(&DataKey::TotalVaultDeposits)
+            .unwrap_or(0);
+        let new_total = total_deposits
+            .checked_add(sweep_amount)
+            .ok_or(YieldSweepError::Overflow)?;
+        e.storage()
+            .persistent()
+            .set(&DataKey::TotalVaultDeposits, &new_total);
+
+        // Emit event
+        e.events().publish(
+            (Symbol::new(&e, "liquid_restaking_sweep"), user.clone()),
+            (sweep_amount, b_tokens_minted),
+        );
+
+        Ok((sweep_amount, b_tokens_minted))
     }
 
     // =========================================================================
