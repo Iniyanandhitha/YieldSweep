@@ -88,31 +88,49 @@ export default function DashboardView({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
             className="px-4 sm:px-6 lg:px-8 pb-20"
         >
             <div className="max-w-7xl mx-auto space-y-8">
 
                 {!isContractInitialized && (
                     <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        className="bg-gradient-to-r from-red-500/20 to-orange-500/20 border-2 border-red-500/70 p-6 rounded-xl flex items-center justify-between shadow-lg shadow-red-500/20"
+                        initial={{ height: 0, opacity: 0, y: -20 }}
+                        animate={{ height: 'auto', opacity: 1, y: 0 }}
+                        exit={{ height: 0, opacity: 0, y: -20 }}
+                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                        className="bg-gradient-to-r from-red-500/20 via-red-600/20 to-orange-500/20 border-2 border-red-500/50 p-6 rounded-2xl flex items-center justify-between shadow-xl shadow-red-500/20"
                     >
                         <div className="flex items-center gap-4">
-                            <div className="bg-red-500/20 p-3 rounded-full">
+                            <motion.div 
+                                className="bg-red-500/20 p-3 rounded-xl"
+                                animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
+                                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                            >
                                 <AlertTriangle className="w-8 h-8 text-red-400" />
-                            </div>
-                            <div>
-                                <h3 className="text-red-400 font-bold text-lg mb-1">Contract Not Initialized</h3>
-                                <p className="text-red-200/80 text-sm">The yield sweep vault needs to be initialized before use. This is a one-time setup.</p>
-                            </div>
+                            </motion.div>
+                            <motion.div
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ delay: 0.2, duration: 0.4 }}
+                            >
+                                <h3 className="text-red-300 font-bold text-base mb-1">Contract Not Initialized</h3>
+                                <p className="text-red-200/80 text-xs font-normal">The yield sweep vault needs to be initialized before use. This is a one-time setup.</p>
+                            </motion.div>
                         </div>
                         <motion.button
-                            whileHover={{ scale: 1.05 }}
+                            whileHover={{ 
+                                scale: 1.05,
+                                boxShadow: "0 10px 30px rgba(239, 68, 68, 0.4)",
+                                transition: { duration: 0.2 }
+                            }}
                             whileTap={{ scale: 0.95 }}
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.3, duration: 0.4 }}
                             onClick={onInitialize}
                             disabled={isLoading}
-                            className="px-8 py-3 bg-red-500 text-white font-bold rounded-lg hover:shadow-lg hover:shadow-red-500/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-8 py-3 bg-red-500 text-white text-sm font-semibold rounded-xl hover:bg-red-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isLoading ? 'Initializing...' : 'Initialize Now'}
                         </motion.button>
@@ -120,7 +138,7 @@ export default function DashboardView({
                 )}
 
                 {/* Section 1: Wallet Overview - Actionable Data */}
-                <div className="grid md:grid-cols-3 gap-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {[
                         {
                             label: 'Wallet Balance',
@@ -133,17 +151,17 @@ export default function DashboardView({
                             label: 'In Yield Vault',
                             value: vaultBalance,
                             suffix: ' XLM',
-                            color: 'text-cyan-400',
+                            color: 'text-blue-400',
                             subtext: (
                                 <div className="flex items-center gap-2 mt-2">
-                                    <span className="px-2 py-0.5 bg-blue-900/50 text-blue-200 text-xs rounded-md border border-blue-700/50">
+                                    <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-[10px] font-medium rounded-lg border border-blue-500/30">
                                         Blend {blendAPY}%
                                     </span>
-                                    <span className="text-xs text-slate-500">+</span>
-                                    <span className="px-2 py-0.5 bg-purple-900/50 text-purple-200 text-xs rounded-md border border-purple-700/50">
+                                    <span className="text-[10px] text-slate-500">+</span>
+                                    <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-[10px] font-medium rounded-lg border border-purple-500/30">
                                         Aqua {aquaAPY}%
                                     </span>
-                                    <span className="text-xs text-green-400 font-semibold ml-1">= {totalAPY}% APY</span>
+                                    <span className="text-[10px] text-green-400 font-bold ml-1">= {totalAPY}%</span>
                                 </div>
                             )
                         },
@@ -164,23 +182,36 @@ export default function DashboardView({
                     ].map((card, i) => (
                         <motion.div
                             key={i}
-                            initial={{ y: 20, opacity: 0 }}
+                            initial={{ y: 30, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.1 + i * 0.05 }}
-                            whileHover={{ y: -5 }}
-                            className={`glass p-8 rounded-xl border border-white/10 hover:border-cyan-400/50 transition ${(card as any).pulse ? 'trust-pulse border-emerald-500/30' : ''}`}
+                            transition={{ delay: 0.1 + i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                            whileHover={{ 
+                                y: -6, 
+                                scale: 1.02,
+                                boxShadow: "0 20px 40px rgba(59, 130, 246, 0.2)",
+                                transition: { duration: 0.3 }
+                            }}
+                            className={`glass p-6 rounded-2xl border border-white/10 hover:border-blue-500/40 transition-all duration-300 ${(card as any).pulse ? 'trust-pulse border-emerald-500/30' : ''}`}
                         >
-                            <p className="text-slate-400 text-sm uppercase tracking-wide mb-3">{card.label}</p>
+                            <p className="text-slate-400 text-[10px] font-medium uppercase tracking-widest mb-3">{card.label}</p>
                             <motion.p
                                 key={Math.floor(card.value)}
-                                initial={{ scale: 0.95 }}
-                                animate={{ scale: 1 }}
-                                className={`text-4xl font-bold ${card.color} mb-2`}
+                                initial={{ scale: 0.95, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ duration: 0.5, ease: "easeOut" }}
+                                className={`text-2xl lg:text-3xl font-bold ${card.color} mb-2 tracking-tight`}
                             >
                                 {card.value.toFixed(2)}{card.suffix}
                             </motion.p>
                             {card.subtext && (
-                                <div className="text-slate-400 text-sm">{card.subtext}</div>
+                                <motion.div 
+                                    className="text-slate-400 text-[10px]"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.2 + i * 0.08, duration: 0.4 }}
+                                >
+                                    {card.subtext}
+                                </motion.div>
                             )}
                         </motion.div>
                     ))}
@@ -188,68 +219,104 @@ export default function DashboardView({
 
                 {/* Action Buttons Section */}
                 <motion.div
-                    initial={{ y: 20, opacity: 0 }}
+                    initial={{ y: 30, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.25 }}
+                    transition={{ delay: 0.35, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                     className="grid grid-cols-2 md:grid-cols-4 gap-4"
                 >
                     <motion.button
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ 
+                            scale: 1.05, 
+                            y: -4,
+                            boxShadow: "0 20px 40px rgba(59, 130, 246, 0.3)",
+                            transition: { duration: 0.2 }
+                        }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => setShowDepositModal(true)}
                         disabled={isLoading || !isContractInitialized}
-                        className="glass p-6 rounded-xl border border-white/10 hover:border-cyan-500/50 transition disabled:opacity-50 disabled:cursor-not-allowed group"
+                        className="glass p-6 rounded-2xl border border-white/10 hover:border-blue-500/60 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
                     >
                         <div className="flex flex-col items-center gap-3">
-                            <div className="p-3 bg-cyan-500/20 rounded-lg group-hover:bg-cyan-500/30 transition">
-                                <ArrowUpCircle className="w-6 h-6 text-cyan-400" />
-                            </div>
-                            <span className="text-white font-semibold">Deposit</span>
+                            <motion.div 
+                                className="p-4 bg-blue-500/20 rounded-xl group-hover:bg-blue-500/30 transition-all duration-300"
+                                whileHover={{ scale: 1.15, rotate: 5 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <ArrowUpCircle className="w-6 h-6 text-blue-400" />
+                            </motion.div>
+                            <span className="text-white font-semibold text-xs tracking-wide">Deposit</span>
                         </div>
                     </motion.button>
 
                     <motion.button
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ 
+                            scale: 1.05, 
+                            y: -4,
+                            boxShadow: "0 20px 40px rgba(168, 85, 247, 0.3)",
+                            transition: { duration: 0.2 }
+                        }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => setShowWithdrawModal(true)}
                         disabled={isLoading || !isContractInitialized || vaultBalance <= 0}
-                        className="glass p-6 rounded-xl border border-white/10 hover:border-purple-500/50 transition disabled:opacity-50 disabled:cursor-not-allowed group"
+                        className="glass p-6 rounded-2xl border border-white/10 hover:border-purple-500/60 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
                     >
                         <div className="flex flex-col items-center gap-3">
-                            <div className="p-3 bg-purple-500/20 rounded-lg group-hover:bg-purple-500/30 transition">
+                            <motion.div 
+                                className="p-4 bg-purple-500/20 rounded-xl group-hover:bg-purple-500/30 transition-all duration-300"
+                                whileHover={{ scale: 1.15, rotate: -5 }}
+                                transition={{ duration: 0.3 }}
+                            >
                                 <ArrowDownCircle className="w-6 h-6 text-purple-400" />
-                            </div>
-                            <span className="text-white font-semibold">Withdraw</span>
+                            </motion.div>
+                            <span className="text-white font-semibold text-xs tracking-wide">Withdraw</span>
                         </div>
                     </motion.button>
 
                     <motion.button
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ 
+                            scale: 1.05, 
+                            y: -4,
+                            boxShadow: "0 20px 40px rgba(34, 197, 94, 0.3)",
+                            transition: { duration: 0.2 }
+                        }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={onSweep}
                         disabled={isLoading || !isContractInitialized || sweepableAmount <= 0}
-                        className="glass p-6 rounded-xl border border-white/10 hover:border-green-500/50 transition disabled:opacity-50 disabled:cursor-not-allowed group"
+                        className="glass p-6 rounded-2xl border border-white/10 hover:border-green-500/60 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
                     >
                         <div className="flex flex-col items-center gap-3">
-                            <div className="p-3 bg-green-500/20 rounded-lg group-hover:bg-green-500/30 transition">
+                            <motion.div 
+                                className="p-4 bg-green-500/20 rounded-xl group-hover:bg-green-500/30 transition-all duration-300"
+                                whileHover={{ scale: 1.15, rotate: 10 }}
+                                transition={{ duration: 0.3 }}
+                            >
                                 <Zap className="w-6 h-6 text-green-400" />
-                            </div>
-                            <span className="text-white font-semibold">Sweep</span>
+                            </motion.div>
+                            <span className="text-white font-semibold text-xs tracking-wide">Sweep</span>
                         </div>
                     </motion.button>
 
                     <motion.button
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ 
+                            scale: 1.05, 
+                            y: -4,
+                            boxShadow: "0 20px 40px rgba(239, 68, 68, 0.3)",
+                            transition: { duration: 0.2 }
+                        }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={onWithdrawAll}
                         disabled={isLoading || !isContractInitialized || vaultBalance <= 0}
-                        className="glass p-6 rounded-xl border border-white/10 hover:border-red-500/50 transition disabled:opacity-50 disabled:cursor-not-allowed group"
+                        className="glass p-6 rounded-2xl border border-white/10 hover:border-red-500/60 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
                     >
                         <div className="flex flex-col items-center gap-3">
-                            <div className="p-3 bg-red-500/20 rounded-lg group-hover:bg-red-500/30 transition">
+                            <motion.div 
+                                className="p-4 bg-red-500/20 rounded-xl group-hover:bg-red-500/30 transition-all duration-300"
+                                whileHover={{ scale: 1.15, rotate: -10 }}
+                                transition={{ duration: 0.3 }}
+                            >
                                 <TrendingUp className="w-6 h-6 text-red-400" />
-                            </div>
-                            <span className="text-white font-semibold">Exit All</span>
+                            </motion.div>
+                            <span className="text-white font-semibold text-xs tracking-wide">Exit All</span>
                         </div>
                     </motion.button>
                 </motion.div>

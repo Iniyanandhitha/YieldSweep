@@ -129,65 +129,105 @@ export default function YieldSweep() {
   return (
     <div className="fintech-bg min-h-screen w-full overflow-hidden font-sans">
       {/* Header/Navigation */}
-      <nav className="glass fixed top-0 left-0 right-0 z-40 border-b border-white/5 bg-slate-950/50 backdrop-blur-md">
+      <motion.nav 
+        className="glass fixed top-0 left-0 right-0 z-40 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           {/* Logo */}
           <motion.div
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.05, rotate: 2 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             onClick={() => !walletConnected && setView('LANDING')}
             className="flex items-center gap-3 cursor-pointer"
           >
-            <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center font-bold text-slate-950 text-sm shadow-[0_0_15px_rgba(6,182,212,0.5)]">
+            <motion.div 
+              className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center font-bold text-white text-sm shadow-lg shadow-blue-500/30"
+              whileHover={{ boxShadow: "0 8px 30px rgba(59, 130, 246, 0.5)" }}
+              transition={{ duration: 0.3 }}
+            >
               YS
-            </div>
+            </motion.div>
             <span className="text-lg font-bold text-white hidden sm:inline tracking-tight">Yield-Sweep</span>
           </motion.div>
 
           {/* Desktop Nav Links */}
           {walletConnected && (
-            <div className="hidden md:flex items-center gap-8">
-              <button
+            <motion.div 
+              className="hidden md:flex items-center gap-8"
+              initial={{ y: -10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            >
+              <motion.button
                 onClick={() => setView('DASHBOARD')}
-                className={`text-sm font-medium transition ${view === 'DASHBOARD' ? 'text-cyan-400' : 'text-slate-400 hover:text-white'}`}
+                className={`text-sm font-medium transition ${view === 'DASHBOARD' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
+                whileHover={{ y: -2 }}
+                transition={{ duration: 0.2 }}
               >
                 Dashboard
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => setView('HISTORY')}
-                className={`text-sm font-medium transition ${view === 'HISTORY' ? 'text-cyan-400' : 'text-slate-400 hover:text-white'}`}
+                className={`text-sm font-medium transition ${view === 'HISTORY' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
+                whileHover={{ y: -2 }}
+                transition={{ duration: 0.2 }}
               >
                 History
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => setView('SETTINGS')}
-                className={`text-sm font-medium transition ${view === 'SETTINGS' ? 'text-cyan-400' : 'text-slate-400 hover:text-white'}`}
+                className={`text-sm font-medium transition ${view === 'SETTINGS' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
+                whileHover={{ y: -2 }}
+                transition={{ duration: 0.2 }}
               >
                 Settings
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           )}
 
           {/* Right Section */}
           <div className="hidden md:flex items-center gap-4">
             {!walletConnected ? (
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ 
+                  scale: 1.05,
+                  boxShadow: "0 10px 30px rgba(59, 130, 246, 0.4)",
+                  transition: { duration: 0.2 }
+                }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handleConnectWallet}
-                className="px-6 py-2 bg-cyan-500 text-slate-950 font-bold rounded-lg hover:shadow-[0_0_15px_rgba(6,182,212,0.4)] transition"
+                className="px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-500 transition-all duration-300"
               >
                 Connect Wallet
               </motion.button>
             ) : (
               <>
-                <div className="glass px-4 py-2 rounded-lg text-sm font-mono text-cyan-400 border border-cyan-500/20 shadow-[0_0_10px_rgba(6,182,212,0.1)]">
+                <motion.div 
+                  className="glass px-4 py-2 rounded-xl text-xs font-mono text-blue-400 border border-blue-500/30 shadow-lg tracking-wider"
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    boxShadow: "0 8px 30px rgba(59, 130, 246, 0.3)",
+                    transition: { duration: 0.2 }
+                  }}
+                >
                   {truncatedAddress}
-                </div>
+                </motion.div>
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={{ 
+                    scale: 1.05, 
+                    rotate: 5,
+                    backgroundColor: "rgba(255, 255, 255, 0.15)",
+                    transition: { duration: 0.2 }
+                  }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleDisconnect}
-                  className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition"
+                  className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all"
                 >
                   <LogOut className="w-5 h-5" />
                 </motion.button>
@@ -215,7 +255,7 @@ export default function YieldSweep() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden glass-alt border-t border-white/5"
+              className="md:hidden glass-alt border-t border-white/10"
             >
               <div className="px-4 py-4 space-y-3">
                 {walletConnected && (
@@ -225,7 +265,7 @@ export default function YieldSweep() {
                         setView('DASHBOARD');
                         setMobileMenuOpen(false);
                       }}
-                      className="block w-full text-left text-slate-300 hover:text-white transition py-2"
+                      className="block w-full text-left text-slate-300 hover:text-white transition-all py-2 font-semibold"
                     >
                       Dashboard
                     </button>
@@ -234,7 +274,7 @@ export default function YieldSweep() {
                         setView('HISTORY');
                         setMobileMenuOpen(false);
                       }}
-                      className="block w-full text-left text-slate-300 hover:text-white transition py-2"
+                      className="block w-full text-left text-slate-300 hover:text-white transition-all py-2 font-semibold"
                     >
                       History
                     </button>
@@ -243,7 +283,7 @@ export default function YieldSweep() {
                         setView('SETTINGS');
                         setMobileMenuOpen(false);
                       }}
-                      className="block w-full text-left text-slate-300 hover:text-white transition py-2"
+                      className="block w-full text-left text-slate-300 hover:text-white transition-all py-2 font-semibold"
                     >
                       Settings
                     </button>
@@ -259,10 +299,14 @@ export default function YieldSweep() {
                 )}
                 {!walletConnected && (
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ 
+                      scale: 1.02,
+                      boxShadow: "0 10px 30px rgba(59, 130, 246, 0.4)",
+                      transition: { duration: 0.2 }
+                    }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handleConnectWallet}
-                    className="w-full px-4 py-2 bg-cyan-500 text-slate-950 font-bold rounded-lg"
+                    className="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg transition-all duration-300"
                   >
                     Connect Wallet
                   </motion.button>
@@ -271,7 +315,7 @@ export default function YieldSweep() {
             </motion.div>
           )}
         </AnimatePresence>
-      </nav>
+      </motion.nav>
 
       {/* Main Content */}
       <div className="pt-24 relative z-10">
