@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Glassmorphism Effects */
+  .glass {
+    @apply backdrop-blur-md bg-white/[0.07] border border-white/10 rounded-xl;
+  }
+  
+  .glass-alt {
+    @apply backdrop-blur-md bg-slate-800/40 border border-slate-700/50 rounded-xl;
+  }
+  
+  /* Professional fintech background */
+  .fintech-bg {
+    @apply bg-gradient-to-b from-slate-950 via-blue-950 to-slate-950;
+  }
+  
+  /* Accent colors */
+  .accent-cyan {
+    @apply text-cyan-400;
+  }
+  
+  .accent-blue {
+    @apply text-blue-400;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 240 10% 5%;
+    --foreground: 0 0% 100%;
+    --card: 240 10% 10%;
+    --card-foreground: 0 0% 100%;
+    --primary: 198 93% 60%;
+    --primary-foreground: 240 10% 5%;
+    --secondary: 217 32% 17%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 240 5% 25%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 198 93% 60%;
+    --accent-foreground: 240 10% 5%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 6% 15%;
+    --input: 240 6% 15%;
+    --ring: 198 93% 60%;
+    --chart-1: 198 93% 60%;
+    --chart-2: 217 32% 17%;
+    --chart-3: 0 0% 30%;
+    --chart-4: 0 84.2% 60.2%;
+    --chart-5: 43 74% 66%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

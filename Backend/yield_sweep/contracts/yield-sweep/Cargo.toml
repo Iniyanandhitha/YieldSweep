@@ -1,0 +1,20 @@
+[package]
+name = "yield-sweep"
+version = "0.1.0"
+edition = "2021"
+description = "A DeFi Vault that automatically sweeps idle user funds into yield-generating strategies"
+authors = ["Yield-Sweep Team"]
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib"]
+doctest = false
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
+
+[features]
+testutils = ["soroban-sdk/testutils"]
