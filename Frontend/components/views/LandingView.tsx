@@ -1,6 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, Shield, Zap, TrendingUp, ArrowRight, DollarSign } from 'lucide-react';
 
 interface LandingViewProps {
     onConnect: () => void;
@@ -10,6 +12,24 @@ interface LandingViewProps {
     sweepableAmount: number;
 }
 
+// Typewriter hook
+function useTypewriter(text: string, speed: number = 50) {
+    const [displayText, setDisplayText] = useState('');
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    useEffect(() => {
+        if (currentIndex < text.length) {
+            const timeout = setTimeout(() => {
+                setDisplayText(prev => prev + text[currentIndex]);
+                setCurrentIndex(prev => prev + 1);
+            }, speed);
+            return () => clearTimeout(timeout);
+        }
+    }, [currentIndex, text, speed]);
+
+    return displayText;
+}
+
 export default function LandingView({
     onConnect,
     walletBalance,
@@ -17,234 +37,252 @@ export default function LandingView({
     vaultBalance,
     sweepableAmount,
 }: LandingViewProps) {
+    const titleText = useTypewriter('Transform Your Idle Assets Into', 80);
+    const [showSubtitle, setShowSubtitle] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setShowSubtitle(true), 2800);
+        return () => clearTimeout(timer);
+    }, []);
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center px-4 py-20"
+            className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center px-4 py-20 relative overflow-hidden"
         >
-            <div className="max-w-6xl w-full space-y-20">
+            {/* Animated background orbs */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <motion.div
+                    className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl"
+                    animate={{
+                        scale: [1, 1.2, 1],
+                        opacity: [0.3, 0.5, 0.3],
+                    }}
+                    transition={{
+                        duration: 8,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                    }}
+                />
+                <motion.div
+                    className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-600/10 rounded-full blur-3xl"
+                    animate={{
+                        scale: [1.2, 1, 1.2],
+                        opacity: [0.3, 0.5, 0.3],
+                    }}
+                    transition={{
+                        duration: 8,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 1
+                    }}
+                />
+            </div>
+
+            <div className="max-w-6xl w-full space-y-20 relative z-10">
                 {/* Hero Section */}
-                <div className="grid md:grid-cols-2 gap-12 items-center">
+                <div className="text-center space-y-12">
                     <motion.div
-                        initial={{ x: -50, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.2, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
                         className="space-y-8"
                     >
-                        <div className="space-y-4">
-                            <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight text-balance tracking-tight">
-                                Turn Your Wallet Into a <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Smart Savings Account</span>
-                            </h1>
-                            <p className="text-base md:text-lg text-slate-300 text-balance leading-relaxed font-normal">
-                                Yield-Sweep automatically earns yield on idle USDC on Stellar — no staking, no manual DeFi steps.
-                            </p>
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <motion.button
-                                whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(59, 130, 246, 0.3)" }}
-                                whileTap={{ scale: 0.95 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                onClick={onConnect}
-                                className="px-8 py-3 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/50 transition-all duration-300"
-                            >
-                                Connect Wallet
-                            </motion.button>
-                            <motion.button
-                                whileHover={{ scale: 1.05, backgroundColor: "rgba(255, 255, 255, 0.15)" }}
-                                whileTap={{ scale: 0.95 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="px-8 py-3 glass text-white text-sm font-semibold rounded-xl hover:bg-white/20 transition-all duration-300 border border-white/20"
-                            >
-                                View Demo
-                            </motion.button>
-                        </div>
-
-                        {/* Stats */}
-                        <div className="grid grid-cols-3 gap-4 pt-8">
-                            {[
-                                { label: 'Users', value: '10,000+' },
-                                { label: 'Safe', value: '96%' },
-                                { label: 'Uptime', value: '24/7' },
-                            ].map((stat, i) => (
-                                <motion.div
-                                    key={i}
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: 0.4 + i * 0.15, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                                    className="text-center"
-                                >
-                                    <motion.p 
-                                        className="text-2xl font-bold text-blue-400"
-                                        whileHover={{ scale: 1.1, y: -2 }}
-                                        transition={{ duration: 0.2 }}
-                                    >
-                                        {stat.value}
-                                    </motion.p>
-                                    <p className="text-slate-400 text-xs font-medium tracking-wide">{stat.label}</p>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </motion.div>
-
-                    {/* Dashboard Preview */}
-                    <motion.div
-                        initial={{ x: 50, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.3, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                        whileHover={{ y: -8, transition: { duration: 0.3 } }}
-                        className="glass p-8 rounded-3xl border border-white/10 shadow-2xl hover:shadow-blue-500/10 transition-shadow duration-500"
-                    >
                         <div className="space-y-6">
-                            <div>
-                                <p className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-2">Wallet Balance</p>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.3 }}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20"
+                            >
+                                <Sparkles className="w-4 h-4 text-purple-400" />
+                                <span className="text-sm text-purple-300">Powered by Stellar Blockchain</span>
+                            </motion.div>
+                            
+                            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight">
+                                <span className="text-white">{titleText}</span>
+                                <motion.span
+                                    className="inline-block w-1 h-16 md:h-20 bg-purple-500 ml-2"
+                                    animate={{ opacity: [1, 0] }}
+                                    transition={{ duration: 0.8, repeat: Infinity }}
+                                />
+                                <br />
+                                {showSubtitle && (
+                                    <motion.span
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.8 }}
+                                        className="gradient-text"
+                                    >
+                                        Yield Powerhouses
+                                    </motion.span>
+                                )}
+                            </h1>
+                            
+                            {showSubtitle && (
                                 <motion.p
-                                    initial={{ scale: 0.9 }}
-                                    animate={{ scale: 1 }}
-                                    className="text-3xl font-bold text-white"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.5, duration: 0.8 }}
+                                    className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed"
                                 >
-                                    {walletBalance.toFixed(2)} XLM
+                                    Automatically sweep idle funds into high-yield DeFi protocols.
+                                    <span className="text-white font-semibold"> Earn 14.5% APY </span>
+                                    with zero manual work.
                                 </motion.p>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="glass-alt p-4 rounded-xl">
-                                    <p className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-2">Safety Limit</p>
-                                    <p className="text-xl font-bold text-white">{safetyBalance.toFixed(2)} XLM</p>
-                                </div>
-                                <div className="glass-alt p-4 rounded-xl">
-                                    <p className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-2">In Vault</p>
-                                    <p className="text-xl font-bold text-blue-400">{vaultBalance.toFixed(2)} XLM</p>
-                                </div>
-                            </div>
-
-                            <div className="border-t border-white/10 pt-4">
-                                <p className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-2">Sweepable Amount</p>
-                                <motion.div
-                                    key={Math.floor(sweepableAmount)}
-                                    initial={{ scale: 0.95 }}
-                                    animate={{ scale: 1 }}
-                                    className="text-2xl font-bold text-blue-400"
-                                >
-                                    {sweepableAmount > 0 ? `${sweepableAmount.toFixed(2)} XLM` : 'No excess funds'}
-                                </motion.div>
-                            </div>
+                            )}
                         </div>
+
+                        {showSubtitle && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.8 }}
+                                className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+                            >
+                                <motion.button
+                                    whileHover={{ scale: 1.05, boxShadow: "0 20px 60px rgba(168, 85, 247, 0.4)" }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={onConnect}
+                                    className="group relative px-10 py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white text-lg font-bold rounded-2xl overflow-hidden"
+                                >
+                                    <motion.div
+                                        className="absolute inset-0 bg-gradient-to-r from-pink-600 via-purple-600 to-pink-600"
+                                        initial={{ x: "100%" }}
+                                        whileHover={{ x: "0%" }}
+                                        transition={{ duration: 0.5 }}
+                                    />
+                                    <span className="relative flex items-center gap-2">
+                                        Get Started
+                                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    </span>
+                                </motion.button>
+                                
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="px-10 py-5 glass text-white text-lg font-semibold rounded-2xl border border-purple-500/30 hover:border-purple-500/50 transition-all backdrop-blur-xl"
+                                >
+                                    Learn More
+                                </motion.button>
+                            </motion.div>
+                        )}
+                        
+                        {/* Animated Stats Bar */}
+                        {showSubtitle && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 1.2 }}
+                                className="flex flex-wrap justify-center gap-8 md:gap-12 pt-8"
+                            >
+                                {[
+                                    { icon: DollarSign, label: 'TVL', value: '$2.5M+', color: 'text-emerald-400' },
+                                    { icon: TrendingUp, label: 'APY', value: '14.5%', color: 'text-purple-400' },
+                                    { icon: Shield, label: 'Security', value: 'Audited', color: 'text-blue-400' },
+                                ].map((stat, i) => (
+                                    <motion.div
+                                        key={stat.label}
+                                        initial={{ opacity: 0, scale: 0.5 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 1.4 + i * 0.1 }}
+                                        className="flex items-center gap-3"
+                                    >
+                                        <div className={`p-2 rounded-lg bg-white/5 ${stat.color}`}>
+                                            <stat.icon className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-500 text-xs">{stat.label}</p>
+                                            <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </motion.div>
+                        )}
+
                     </motion.div>
                 </div>
 
-                {/* How It Works Section */}
-                <div className="space-y-12">
-                    <div className="text-center space-y-3 max-w-2xl mx-auto">
-                        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">How It Works</h2>
-                        <p className="text-base text-slate-400 font-normal">Three simple steps to start earning yield automatically</p>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-8">
+                {/* Feature Cards */}
+                {showSubtitle && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 40 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 1.6, duration: 0.8 }}
+                        className="grid md:grid-cols-3 gap-6"
+                    >
                         {[
                             {
-                                num: 1,
-                                title: 'Set Safety Balance',
-                                description: 'Choose how much USDC stays liquid for spending.',
+                                icon: Zap,
+                                title: 'Lightning Fast',
+                                description: 'Instant sweeps and withdrawals powered by Stellar',
+                                gradient: 'from-purple-500/10 to-pink-500/10',
+                                border: 'border-purple-500/30',
+                                iconColor: 'text-purple-400',
+                                delay: 0
                             },
                             {
-                                num: 2,
-                                title: 'Auto-Sweep Excess',
-                                description: 'Extra funds are automatically deposited into Blend to earn yield.',
+                                icon: Shield,
+                                title: 'Secure & Reliable',
+                                description: 'Smart contracts audited and battle-tested on-chain',
+                                gradient: 'from-blue-500/10 to-purple-500/10',
+                                border: 'border-blue-500/30',
+                                iconColor: 'text-blue-400',
+                                delay: 0.1
                             },
                             {
-                                num: 3,
-                                title: 'Earn Yield Instantly',
-                                description: 'Interest accrues every second and compounds automatically.',
-                            },
-                        ].map((step, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ y: 30, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ 
-                                    delay: 0.4 + i * 0.15, 
-                                    duration: 0.6, 
-                                    ease: [0.22, 1, 0.36, 1] 
-                                }}
-                                whileHover={{ 
-                                    y: -8, 
-                                    scale: 1.03,
-                                    boxShadow: "0 20px 40px rgba(59, 130, 246, 0.2)",
-                                    transition: { duration: 0.3 }
-                                }}
-                                className="glass p-8 rounded-2xl border border-white/10 hover:border-blue-500/50 transition-all duration-300 group"
-                            >
-                                <motion.div 
-                                    className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-lg mb-4 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300"
-                                    whileHover={{ rotate: 360, scale: 1.1 }}
-                                    transition={{ duration: 0.5 }}
-                                >
-                                    {step.num}
-                                </motion.div>
-                                <h3 className="text-lg font-semibold text-white mb-2 tracking-tight">{step.title}</h3>
-                                <p className="text-slate-400 text-sm leading-relaxed">{step.description}</p>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Features Section */}
-                <div className="space-y-12">
-                    <div className="text-center space-y-3 max-w-2xl mx-auto">
-                        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">What is Yield-Sweep?</h2>
-                        <p className="text-base text-slate-400 font-normal">Enterprise-grade DeFi automation</p>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-6">
-                        {[
-                            {
-                                icon: '🔒',
-                                title: 'Non-Custodial Smart Contracts',
-                                description: 'Your funds stay in your control at all times.',
-                            },
-                            {
-                                icon: '⚡',
-                                title: 'Instant Withdraw Anytime',
-                                description: 'Access your funds instantly whenever needed.',
-                            },
-                            {
-                                icon: '🚀',
-                                title: 'Fully Automated Yield Optimization',
-                                description: 'Maximize returns with zero manual intervention.',
+                                icon: TrendingUp,
+                                title: '24/7 Yield Generation',
+                                description: 'Automated DeFi strategies working around the clock',
+                                gradient: 'from-emerald-500/10 to-green-500/10',
+                                border: 'border-emerald-500/30',
+                                iconColor: 'text-emerald-400',
+                                delay: 0.2
                             },
                         ].map((feature, i) => (
                             <motion.div
-                                key={i}
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.4 + i * 0.1 }}
-                                whileHover={{ y: -5 }}
-                                className="glass p-6 rounded-xl border border-white/10 hover:border-cyan-400/50 transition text-center"
+                                key={feature.title}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 1.8 + feature.delay }}
+                                whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                                className={`relative group p-8 rounded-3xl bg-gradient-to-br ${feature.gradient} border ${feature.border} backdrop-blur-xl overflow-hidden`}
                             >
-                                <div className="text-3xl mb-4">{feature.icon}</div>
-                                <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                                <p className="text-slate-400 text-sm">{feature.description}</p>
+                                <motion.div
+                                    className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                                />
+                                <div className="relative z-10 space-y-4">
+                                    <motion.div
+                                        whileHover={{ rotate: 360 }}
+                                        transition={{ duration: 0.6 }}
+                                        className={`w-14 h-14 rounded-2xl bg-black/30 flex items-center justify-center ${feature.iconColor}`}
+                                    >
+                                        <feature.icon className="w-7 h-7" />
+                                    </motion.div>
+                                    <h3 className="text-2xl font-bold text-white">{feature.title}</h3>
+                                    <p className="text-slate-400 leading-relaxed">{feature.description}</p>
+                                </div>
+                                
+                                {/* Animated corner accent */}
+                                <motion.div
+                                    className={`absolute -right-8 -bottom-8 w-32 h-32 rounded-full ${feature.gradient} blur-2xl opacity-50`}
+                                    animate={{
+                                        scale: [1, 1.2, 1],
+                                        opacity: [0.5, 0.8, 0.5],
+                                    }}
+                                    transition={{
+                                        duration: 4,
+                                        repeat: Infinity,
+                                        delay: i * 0.5
+                                    }}
+                                />
                             </motion.div>
                         ))}
-                    </div>
-                </div>
-
-                {/* Final CTA */}
-                <div className="text-center space-y-6 py-12">
-                    <h2 className="text-4xl font-bold text-white">Start Earning in One Click</h2>
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={onConnect}
-                        className="inline-block px-12 py-4 bg-cyan-500 text-slate-950 font-bold rounded-lg hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition text-lg"
-                    >
-                        Connect Wallet
-                    </motion.button>
-                </div>
+                    </motion.div>
+                )}
             </div>
         </motion.div>
     );

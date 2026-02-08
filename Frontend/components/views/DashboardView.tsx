@@ -36,6 +36,9 @@ interface DashboardViewProps {
     aquaAPY?: number;
     totalAPY?: number;
     projectedMonthlyEarnings?: number;
+    // Privacy mode props
+    privacyMode?: boolean;
+    formatBalance?: (amount: number) => string;
 }
 
 export default function DashboardView({
@@ -65,9 +68,14 @@ export default function DashboardView({
     aquaAPY = 9.5,
     totalAPY = 14.5,
     projectedMonthlyEarnings = 0,
+    privacyMode = false,
+    formatBalance,
 }: DashboardViewProps) {
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+
+    // Default format function if not provided
+    const displayBalance = formatBalance || ((amount: number) => amount.toFixed(2));
 
     const handleDeposit = async (amount: number) => {
         if (onDeposit) {
@@ -201,7 +209,7 @@ export default function DashboardView({
                                 transition={{ duration: 0.5, ease: "easeOut" }}
                                 className={`text-2xl lg:text-3xl font-bold ${card.color} mb-2 tracking-tight`}
                             >
-                                {card.value.toFixed(2)}{card.suffix}
+                                {displayBalance(card.value)}{card.suffix}
                             </motion.p>
                             {card.subtext && (
                                 <motion.div 
@@ -342,7 +350,7 @@ export default function DashboardView({
                                     <label className="text-sm uppercase tracking-wide text-slate-300">
                                         Keep liquid:
                                     </label>
-                                    <span className="text-xl font-bold text-white">${safetyBalance.toFixed(2)}</span>
+                                    <span className="text-xl font-bold text-white">{displayBalance(safetyBalance)} XLM</span>
                                 </div>
 
                                 <SmartSlider
@@ -361,13 +369,13 @@ export default function DashboardView({
                                 <div>
                                     <p className="text-slate-400 text-xs uppercase tracking-wide mb-1">New Sweep Amount</p>
                                     <p className="text-xl font-bold text-emerald-400">
-                                        {Math.max(0, walletBalance - safetyBalance).toFixed(2)} XLM
+                                        {displayBalance(Math.max(0, walletBalance - safetyBalance))} XLM
                                     </p>
                                 </div>
                                 <div>
                                     <p className="text-slate-400 text-xs uppercase tracking-wide mb-1">Est. Monthly Interest</p>
                                     <p className="text-xl font-bold text-cyan-400">
-                                        +${(vaultBalance * 0.05 / 12).toFixed(2)}
+                                        +{displayBalance(vaultBalance * 0.05 / 12)} XLM
                                     </p>
                                 </div>
                             </div>
@@ -393,7 +401,7 @@ export default function DashboardView({
 
                     {/* Section 3: Earnings & Charts */}
                     <div className="space-y-6">
-                        <GrowthChart currentBalance={vaultBalance} yieldRate={0.05} />
+                        <GrowthChart currentBalance={vaultBalance} monthlyRate={0.05 / 12} />
 
                         <motion.div
                             initial={{ y: 20, opacity: 0 }}

@@ -6,14 +6,21 @@ import {
   Menu,
   X,
   LogOut,
+  LayoutDashboard,
+  Zap,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  BarChart3,
 } from 'lucide-react';
 import { useYieldVault } from '../hooks/useYieldVault';
 import LandingView from '@/components/views/LandingView';
-import DashboardView from '@/components/views/DashboardView';
+import OverviewView from '@/components/views/OverviewView';
+import SweepView from '@/components/views/SweepView';
+import TransactView from '@/components/views/TransactView';
+import AnalyticsView from '@/components/views/AnalyticsView';
 import { TransactionNotification } from '@/components/TransactionNotification';
-import { DemoHelper } from '@/components/DemoHelper';
 
-type View = 'LANDING' | 'DASHBOARD' | 'HISTORY' | 'SETTINGS';
+type View = 'LANDING' | 'OVERVIEW' | 'SWEEP' | 'TRANSACT' | 'ANALYTICS' | 'SETTINGS';
 
 export default function YieldSweep() {
   // Initialize the Yield Vault hook for smart contract interactions
@@ -42,15 +49,76 @@ export default function YieldSweep() {
     lastTransactionHash,
     transactionNotification,
     setTransactionNotification,
+    // Real-time APY data
+    blendAPY,
+    aquaAPY,
+    totalAPY,
+    projectedMonthlyEarnings,
+    apyLastUpdated,
+    refreshAPYData,
   } = useYieldVault();
 
   const [view, setView] = useState<View>('LANDING');
   const [safetyBalance, setSafetyBalance] = useState(0);
-  const [autoSweepEnabled, setAutoSweepEnabled] = useState(false);
+  const [autoSweepEnabled, setAutoSweepEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('autoSweepEnabled') === 'true';
+    }
+    return false;
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [demoHelperVisible, setDemoHelperVisible] = useState(true); // Show demo helper for judges
+
+  // Settings state
+  const [autoCompound, setAutoCompound] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('autoCompound') === 'true';
+    }
+    return false;
+  });
+  const [privacyMode, setPrivacyMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('privacyMode') === 'true';
+    }
+    return false;
+  });
+  const [currency, setCurrency] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('currency') || 'XLM';
+    }
+    return 'XLM';
+  });
+  const [transactionAlerts, setTransactionAlerts] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('transactionAlerts') !== 'false';
+    }
+    return true;
+  });
+  const [sweepAlerts, setSweepAlerts] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('sweepAlerts') === 'true';
+    }
+    return false;
+  });
+  const [yieldUpdates, setYieldUpdates] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('yieldUpdates') === 'true';
+    }
+    return false;
+  });
+  const [slippage, setSlippage] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('slippage') || '0.1';
+    }
+    return '0.1';
+  });
+  const [transactionSpeed, setTransactionSpeed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('transactionSpeed') || 'Fast';
+    }
+    return 'Fast';
+  });
 
   // Derive wallet connection state from the hook
   const walletConnected = !!userAddress;
@@ -59,6 +127,27 @@ export default function YieldSweep() {
   useEffect(() => {
     setSafetyBalance(safetyLimit);
   }, [safetyLimit]);
+
+  // Persist settings to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('autoSweepEnabled', autoSweepEnabled.toString());
+      localStorage.setItem('autoCompound', autoCompound.toString());
+      localStorage.setItem('privacyMode', privacyMode.toString());
+      localStorage.setItem('currency', currency);
+      localStorage.setItem('transactionAlerts', transactionAlerts.toString());
+      localStorage.setItem('sweepAlerts', sweepAlerts.toString());
+      localStorage.setItem('yieldUpdates', yieldUpdates.toString());
+      localStorage.setItem('slippage', slippage);
+      localStorage.setItem('transactionSpeed', transactionSpeed);
+    }
+  }, [autoSweepEnabled, autoCompound, privacyMode, currency, transactionAlerts, sweepAlerts, yieldUpdates, slippage, transactionSpeed]);
+
+  // Helper to format balance based on privacy mode
+  const formatBalance = (amount: number) => {
+    if (privacyMode) return '••••';
+    return amount.toFixed(2);
+  };
 
   const handleConnectWallet = async () => {
     try {
@@ -69,10 +158,10 @@ export default function YieldSweep() {
     }
   };
 
-  // Effect to switch to dashboard when wallet connects
+  // Effect to switch to overview when wallet connects
   useEffect(() => {
     if (userAddress && view === 'LANDING') {
-      setView('DASHBOARD');
+      setView('OVERVIEW');
       showNotification('Wallet connected successfully');
     }
   }, [userAddress, view]);
@@ -144,42 +233,62 @@ export default function YieldSweep() {
             className="flex items-center gap-3 cursor-pointer"
           >
             <motion.div 
-              className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center font-bold text-white text-sm shadow-lg shadow-blue-500/30"
-              whileHover={{ boxShadow: "0 8px 30px rgba(59, 130, 246, 0.5)" }}
+              className="w-9 h-9 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center font-bold text-white text-sm shadow-lg shadow-purple-500/30"
+              whileHover={{ boxShadow: "0 8px 30px rgba(147, 51, 234, 0.5)" }}
               transition={{ duration: 0.3 }}
             >
               YS
             </motion.div>
-            <span className="text-lg font-bold text-white hidden sm:inline tracking-tight">Yield-Sweep</span>
+            <span className="text-lg font-bold gradient-text hidden sm:inline tracking-tight">Yield-Sweep</span>
           </motion.div>
 
           {/* Desktop Nav Links */}
           {walletConnected && (
             <motion.div 
-              className="hidden md:flex items-center gap-8"
+              className="hidden md:flex items-center gap-6"
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
               <motion.button
-                onClick={() => setView('DASHBOARD')}
-                className={`text-sm font-medium transition ${view === 'DASHBOARD' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
+                onClick={() => setView('OVERVIEW')}
+                className={`text-sm font-medium transition flex items-center gap-2 ${view === 'OVERVIEW' ? 'text-purple-400' : 'text-slate-400 hover:text-white'}`}
                 whileHover={{ y: -2 }}
                 transition={{ duration: 0.2 }}
               >
-                Dashboard
+                <LayoutDashboard className="w-4 h-4" />
+                Overview
               </motion.button>
               <motion.button
-                onClick={() => setView('HISTORY')}
-                className={`text-sm font-medium transition ${view === 'HISTORY' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
+                onClick={() => setView('SWEEP')}
+                className={`text-sm font-medium transition flex items-center gap-2 ${view === 'SWEEP' ? 'text-purple-400' : 'text-slate-400 hover:text-white'}`}
                 whileHover={{ y: -2 }}
                 transition={{ duration: 0.2 }}
               >
-                History
+                <Zap className="w-4 h-4" />
+                Sweep
+              </motion.button>
+              <motion.button
+                onClick={() => setView('TRANSACT')}
+                className={`text-sm font-medium transition flex items-center gap-2 ${view === 'TRANSACT' ? 'text-purple-400' : 'text-slate-400 hover:text-white'}`}
+                whileHover={{ y: -2 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ArrowDownCircle className="w-4 h-4" />
+                Transact
+              </motion.button>
+              <motion.button
+                onClick={() => setView('ANALYTICS')}
+                className={`text-sm font-medium transition flex items-center gap-2 ${view === 'ANALYTICS' ? 'text-purple-400' : 'text-slate-400 hover:text-white'}`}
+                whileHover={{ y: -2 }}
+                transition={{ duration: 0.2 }}
+              >
+                <BarChart3 className="w-4 h-4" />
+                Analytics
               </motion.button>
               <motion.button
                 onClick={() => setView('SETTINGS')}
-                className={`text-sm font-medium transition ${view === 'SETTINGS' ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
+                className={`text-sm font-medium transition ${view === 'SETTINGS' ? 'text-purple-400' : 'text-slate-400 hover:text-white'}`}
                 whileHover={{ y: -2 }}
                 transition={{ duration: 0.2 }}
               >
@@ -194,12 +303,12 @@ export default function YieldSweep() {
               <motion.button
                 whileHover={{ 
                   scale: 1.05,
-                  boxShadow: "0 10px 30px rgba(59, 130, 246, 0.4)",
+                  boxShadow: "0 10px 30px rgba(147, 51, 234, 0.4)",
                   transition: { duration: 0.2 }
                 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleConnectWallet}
-                className="px-6 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-500 transition-all duration-300"
+                className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
               >
                 Connect Wallet
               </motion.button>
@@ -262,21 +371,43 @@ export default function YieldSweep() {
                   <>
                     <button
                       onClick={() => {
-                        setView('DASHBOARD');
+                        setView('OVERVIEW');
                         setMobileMenuOpen(false);
                       }}
-                      className="block w-full text-left text-slate-300 hover:text-white transition-all py-2 font-semibold"
+                      className="flex items-center gap-2 w-full text-left text-slate-300 hover:text-white transition-all py-2 font-semibold"
                     >
-                      Dashboard
+                      <LayoutDashboard className="w-4 h-4" />
+                      Overview
                     </button>
                     <button
                       onClick={() => {
-                        setView('HISTORY');
+                        setView('SWEEP');
                         setMobileMenuOpen(false);
                       }}
-                      className="block w-full text-left text-slate-300 hover:text-white transition-all py-2 font-semibold"
+                      className="flex items-center gap-2 w-full text-left text-slate-300 hover:text-white transition-all py-2 font-semibold"
                     >
-                      History
+                      <Zap className="w-4 h-4" />
+                      Sweep
+                    </button>
+                    <button
+                      onClick={() => {
+                        setView('TRANSACT');
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full text-left text-slate-300 hover:text-white transition-all py-2 font-semibold"
+                    >
+                      <ArrowDownCircle className="w-4 h-4" />
+                      Transact
+                    </button>
+                    <button
+                      onClick={() => {
+                        setView('ANALYTICS');
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full text-left text-slate-300 hover:text-white transition-all py-2 font-semibold"
+                    >
+                      <BarChart3 className="w-4 h-4" />
+                      Analytics
                     </button>
                     <button
                       onClick={() => {
@@ -301,12 +432,12 @@ export default function YieldSweep() {
                   <motion.button
                     whileHover={{ 
                       scale: 1.02,
-                      boxShadow: "0 10px 30px rgba(59, 130, 246, 0.4)",
+                      boxShadow: "0 10px 30px rgba(147, 51, 234, 0.4)",
                       transition: { duration: 0.2 }
                     }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handleConnectWallet}
-                    className="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg transition-all duration-300"
+                    className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg transition-all duration-300"
                   >
                     Connect Wallet
                   </motion.button>
@@ -330,66 +461,280 @@ export default function YieldSweep() {
               sweepableAmount={sweepableAmount}
             />
           )}
-          {walletConnected && view === 'DASHBOARD' && (
-            <DashboardView
-              key="dashboard"
-              walletBalance={balance}
-              safetyBalance={safetyBalance}
-              setSafetyBalance={setSafetyBalance}
-              vaultBalance={vaultBalance}
-              sweepableAmount={sweepableAmount}
-              investedAmount={investedAmount}
-              totalVaultDeposits={totalVaultDeposits}
-              totalInvested={totalInvested}
-              truncatedAddress={truncatedAddress}
-              autoSweepEnabled={autoSweepEnabled}
-              setAutoSweepEnabled={setAutoSweepEnabled}
-              showNotification={showNotification}
-              onUpdateSafetyLimit={handleUpdateSafetyLimit}
-              onSweep={handleSweep}
-              onDeposit={deposit}
-              onWithdraw={withdraw}
-              isLoading={isLoading}
-              isContractInitialized={isContractInitialized}
-              onInitialize={initializeVault}
-              onWithdrawAll={withdrawAll}
-              onSimulatePayment={simulateIncomingPayment}
-            />
-          )}
-          {/* Placeholders for other views if needed or keep inline */}
-          {walletConnected && view === 'HISTORY' && (
-            <div className="max-w-7xl mx-auto px-4 py-12 text-center text-slate-400">
-              <h2 className="text-2xl font-bold text-white mb-4">Transaction History</h2>
-              <div className="glass p-8 rounded-xl">
-                <p>No recent transactions</p>
+          
+          {/* Main Content */}
+          {walletConnected && (
+            <div className="w-full">
+                {view === 'OVERVIEW' && (
+                  <OverviewView
+                    key="overview"
+                    walletBalance={balance}
+                    vaultBalance={vaultBalance}
+                    investedAmount={investedAmount}
+                    projectedMonthlyEarnings={projectedMonthlyEarnings}
+                    blendAPY={blendAPY}
+                    aquaAPY={aquaAPY}
+                    totalAPY={totalAPY}
+                    apyLastUpdated={apyLastUpdated}
+                    onRefreshAPY={refreshAPYData}
+                    formatBalance={formatBalance}
+                  />
+                )}
+                {view === 'SWEEP' && (
+                  <SweepView
+                    key="sweep"
+                    walletBalance={balance}
+                    safetyBalance={safetyBalance}
+                    setSafetyBalance={setSafetyBalance}
+                    sweepableAmount={sweepableAmount}
+                    vaultBalance={vaultBalance}
+                    onSweep={handleSweep}
+                    onUpdateSafetyLimit={handleUpdateSafetyLimit}
+                    isLoading={isLoading}
+                    formatBalance={formatBalance}
+                  />
+                )}
+                {view === 'TRANSACT' && (
+                  <TransactView
+                    key="transact"
+                    walletBalance={balance}
+                    vaultBalance={vaultBalance}
+                    onDeposit={deposit}
+                    onWithdraw={withdraw}
+                    onWithdrawAll={withdrawAll}
+                    isLoading={isLoading}
+                    formatBalance={formatBalance}
+                  />
+                )}
+                {view === 'ANALYTICS' && (
+                  <AnalyticsView
+                    key="analytics"
+                    vaultBalance={vaultBalance}
+                    investedAmount={investedAmount}
+                    projectedMonthlyEarnings={projectedMonthlyEarnings}
+                    blendAPY={blendAPY}
+                    aquaAPY={aquaAPY}
+                    totalAPY={totalAPY}
+                    formatBalance={formatBalance}
+                  />
+                )}
+                {view === 'SETTINGS' && (
+            <div className="max-w-7xl mx-auto px-4 py-12">
+              <h2 className="text-2xl font-bold gradient-text mb-6">Settings</h2>
+              
+              <div className="max-w-3xl mx-auto space-y-6">
+                {/* Automation Settings */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="glass p-6 rounded-xl"
+                >
+                  <h3 className="text-lg font-semibold text-white mb-4">Automation</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-white font-medium">Auto-Sweep</span>
+                        <p className="text-xs text-slate-400 mt-1">Automatically sweep excess funds when detected</p>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setAutoSweepEnabled(!autoSweepEnabled)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all ${autoSweepEnabled ? 'bg-blue-500' : 'bg-slate-700'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all ${autoSweepEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </motion.button>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-white font-medium">Auto-Compound</span>
+                        <p className="text-xs text-slate-400 mt-1">Automatically reinvest earned yields</p>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setAutoCompound(!autoCompound)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all ${autoCompound ? 'bg-blue-500' : 'bg-slate-700'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all ${autoCompound ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Display Preferences */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="glass p-6 rounded-xl"
+                >
+                  <h3 className="text-lg font-semibold text-white mb-4">Display</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-white font-medium">Privacy Mode</span>
+                        <p className="text-xs text-slate-400 mt-1">Hide balance amounts from display</p>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setPrivacyMode(!privacyMode)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all ${privacyMode ? 'bg-blue-500' : 'bg-slate-700'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all ${privacyMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </motion.button>
+                    </div>
+                    
+                    <div>
+                      <label className="text-white font-medium">Currency Display</label>
+                      <p className="text-xs text-slate-400 mt-1 mb-2">Choose your preferred currency</p>
+                      <select 
+                        value={currency}
+                        onChange={(e) => setCurrency(e.target.value)}
+                        className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="XLM">XLM (Stellar Lumens)</option>
+                        <option value="USD">USD (US Dollar)</option>
+                        <option value="EUR">EUR (Euro)</option>
+                      </select>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Notifications */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="glass p-6 rounded-xl"
+                >
+                  <h3 className="text-lg font-semibold text-white mb-4">Notifications</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-white font-medium">Transaction Alerts</span>
+                        <p className="text-xs text-slate-400 mt-1">Notify me when transactions complete</p>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setTransactionAlerts(!transactionAlerts)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all ${transactionAlerts ? 'bg-blue-500' : 'bg-slate-700'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all ${transactionAlerts ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </motion.button>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-white font-medium">Sweep Opportunities</span>
+                        <p className="text-xs text-slate-400 mt-1">Alert when sweepable amount exceeds threshold</p>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setSweepAlerts(!sweepAlerts)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all ${sweepAlerts ? 'bg-blue-500' : 'bg-slate-700'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all ${sweepAlerts ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </motion.button>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-white font-medium">Yield Updates</span>
+                        <p className="text-xs text-slate-400 mt-1">Weekly earnings summary reports</p>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setYieldUpdates(!yieldUpdates)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all ${yieldUpdates ? 'bg-blue-500' : 'bg-slate-700'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all ${yieldUpdates ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Advanced Settings */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="glass p-6 rounded-xl"
+                >
+                  <h3 className="text-lg font-semibold text-white mb-4">Advanced</h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-white font-medium">Slippage Tolerance</label>
+                      <p className="text-xs text-slate-400 mt-1 mb-2">Maximum price slippage for swaps</p>
+                      <select 
+                        value={slippage}
+                        onChange={(e) => setSlippage(e.target.value)}
+                        className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="0.1">0.1% (Recommended)</option>
+                        <option value="0.5">0.5%</option>
+                        <option value="1.0">1.0%</option>
+                        <option value="custom">Custom</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="text-white font-medium">Transaction Speed</label>
+                      <p className="text-xs text-slate-400 mt-1 mb-2">Gas price preference</p>
+                      <select 
+                        value={transactionSpeed}
+                        onChange={(e) => setTransactionSpeed(e.target.value)}
+                        className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="Standard">Standard (Lower fees)</option>
+                        <option value="Fast">Fast (Recommended)</option>
+                        <option value="Instant">Instant (Higher fees)</option>
+                      </select>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Account Info */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="glass p-6 rounded-xl"
+                >
+                  <h3 className="text-lg font-semibold text-white mb-4">Account</h3>
+                  
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Connected Wallet</span>
+                      <span className="text-white font-mono text-sm">{truncatedAddress}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Network</span>
+                      <span className="text-white">Stellar Testnet</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Contract Version</span>
+                      <span className="text-white">v1.0.0</span>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
             </div>
-          )}
-          {walletConnected && view === 'SETTINGS' && (
-            <div className="max-w-7xl mx-auto px-4 py-12 text-center text-slate-400">
-              <h2 className="text-2xl font-bold text-white mb-4">Settings</h2>
-              <div className="glass p-8 rounded-xl max-w-lg mx-auto">
-                <div className="flex items-center justify-between">
-                  <span>Auto-Sweep</span>
-                  <motion.button
-                    onClick={() => setAutoSweepEnabled(!autoSweepEnabled)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all ${autoSweepEnabled ? 'bg-cyan-500' : 'bg-slate-700'}`}
-                  >
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all ${autoSweepEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
-                  </motion.button>
-                </div>
-              </div>
+                )}
             </div>
           )}
         </AnimatePresence>
       </div>
-
-      {/* Demo Helper - Quick Links for Judges */}
-      <DemoHelper 
-        userAddress={userAddress}
-        isVisible={demoHelperVisible}
-        onToggle={() => setDemoHelperVisible(!demoHelperVisible)}
-      />
 
       {/* Transaction Notification with Explorer Link */}
       <TransactionNotification 

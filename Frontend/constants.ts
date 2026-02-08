@@ -7,3 +7,8 @@ export const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
 
 // Asset IDs (Native XLM token contract on testnet)
 export const USDC_CONTRACT = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC'; // Native XLM Token Contract
+
+// DeFi Protocol APIs for real-time APY data
+export const BLEND_API_URL = 'https://api.blend.capital';
+export const AQUA_API_URL = 'https://api.aqua.network';
+export const APY_REFRESH_INTERVAL = 30000; // Refresh APY data every 30 seconds
