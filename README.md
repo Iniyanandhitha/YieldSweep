@@ -1,373 +1,459 @@
-# Yield-Sweep 🚀
+# Yield-Sweep 💎
 
-**Automated DeFi Yield Optimization on Stellar Soroban**
+<div align="center">
 
-Turn your crypto wallet into a smart savings account. Set a safety limit, and Yield-Sweep automatically invests excess funds into high-yield DeFi protocols while keeping your spending money liquid.
+**Automated DeFi Yield Optimization on Stellar**
 
-[![Stellar](https://img.shields.io/badge/Stellar-Soroban-blue?logo=stellar)](https://stellar.org)
-[![Rust](https://img.shields.io/badge/Rust-1.70+-orange?logo=rust)](https://www.rust-lang.org)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+Transform your crypto wallet into a smart savings account with automated yield generation
+
+[![Stellar](https://img.shields.io/badge/Stellar-Soroban-7D00FF?logo=stellar&logoColor=white)](https://stellar.org)
+[![Rust](https://img.shields.io/badge/Rust-1.70+-CE422B?logo=rust&logoColor=white)](https://www.rust-lang.org)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+
+[Demo](#-live-demo) • [Features](#-features) • [Architecture](#-architecture) • [Installation](#-installation) • [Usage](#-usage)
+
+</div>
+
+---
+
+## 🎯 What is Yield-Sweep?
+
+Yield-Sweep is an automated DeFi yield optimizer built on Stellar's Soroban smart contracts. It works like a smart savings account that:
+
+1. **You set a safety limit** (e.g., keep 50 XLM liquid)
+2. **It automatically sweeps excess funds** into high-yield DeFi protocols
+3. **Earns 14.5% APY** through liquid restaking (Blend + Aquarius)
+4. **You withdraw anytime** - no lock-ups, full control
+
+Think of it as the "auto-save" feature for your crypto wallet, but earning yield on autopilot.
 
 ---
 
 ## ✨ Features
 
-- 🎯 **Safety-First Design**: Set a safety limit, funds below it stay liquid
-- ⚡ **Atomic Operations**: Multi-protocol interactions in single transactions
-- 💰 **Liquid Restaking**: Stack yield from Blend (5%) + Aquarius (9.5%) = 14.5% APY
-- 🔐 **Non-Custodial**: You always control your funds
-- 🚪 **Emergency Exit**: One-click withdrawal, no lock-ups
-- 📊 **Real-Time Tracking**: Live balance updates and earnings projections
+### 🔐 Safety First
+- **Safety Limit Protection**: Funds below your threshold stay liquid for daily spending
+- **Non-Custodial**: You always retain full control of your assets
+- **Emergency Withdrawals**: One-click exit, no questions asked
+- **Transparent Operations**: Every transaction verifiable on Stellar Explorer
 
----
+### ⚡ Performance
+- **Atomic Operations**: Multi-protocol interactions in single transactions
+- **Gas Optimized**: Minimal fees (~$0.0001 per transaction)
+- **Sub-5 Second Transactions**: Leveraging Stellar's speed
+- **Auto-Compounding**: Earnings automatically reinvested
 
-## 🎬 Quick Demo (For Judges)
+### 💰 Yield Strategy
+- **Liquid Restaking**: Stake once, earn twice
+  - Blend Protocol: 5% APY (lending yield)
+  - Aquarius Gauge: 9.5% APY (LP rewards)
+  - **Total: 14.5% APY** 📈
+- **No Impermanent Loss**: Single-asset strategies
+- **Diversified Risk**: Multi-protocol exposure
 
-### 1️⃣ Preparation (5 minutes)
-```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/yield-sweep
-cd yield-sweep
-
-# Run the demo preparation script
-./prepare-demo.sh
-
-# This will:
-# - Check all dependencies
-# - Install packages
-# - Show important URLs
-# - Start the development server
-```
-
-### 2️⃣ Demo Flow (5-7 minutes)
-Follow the comprehensive guide: **[DEMO_GUIDE.md](DEMO_GUIDE.md)**
-
-**Key Demo Points:**
-1. ✅ Connect real Freighter wallet
-2. ✅ Show balance matching Stellar Explorer
-3. ✅ Set safety limit with on-chain transaction
-4. ✅ Execute sweep - verify transaction hash
-5. ✅ Show funds in Blend + Aquarius on Explorer
-6. ✅ Emergency withdrawal demonstration
-
-### 3️⃣ Verification
-Every transaction is verifiable on:
-**https://stellar.expert/explorer/testnet**
+### 📊 User Experience
+- **Beautiful Dashboard**: Real-time balance tracking and earnings projections
+- **Smooth Animations**: Framer Motion-powered interactions
+- **Responsive Design**: Perfect on desktop and mobile
+- **Wallet Integration**: Seamless Freighter wallet support
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-User Wallet → Yield-Sweep Contract → Blend Protocol (5% APY)
-                                   → Aquarius Gauge (9.5% APY)
-                                   = 14.5% Total APY
+┌─────────────────────────────────────────────────────────┐
+│                    USER WALLET                           │
+│              (Freighter / Stellar Account)               │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     │ Set Safety Limit & Sign Transactions
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│            YIELD-SWEEP SMART CONTRACT                    │
+│                  (Soroban / Rust)                        │
+│                                                          │
+│  Core Functions:                                        │
+│  ├─ check_and_sweep()    Atomic sweep logic            │
+│  ├─ set_safety_limit()   User config storage           │
+│  ├─ deposit()            Manual deposits               │
+│  ├─ withdraw()           Partial withdrawals           │
+│  └─ withdraw_all()       Emergency exit                │
+│                                                          │
+│  Storage (Per User):                                    │
+│  ├─ safety_limit: i128                                 │
+│  ├─ deposited: i128                                    │
+│  └─ invested: i128                                     │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     │ Sweep excess funds above safety limit
+                     │
+         ┌───────────┴──────────┬──────────────────┐
+         │                      │                  │
+         ▼                      ▼                  ▼
+┌──────────────────┐  ┌──────────────────┐  ┌────────────┐
+│ BLEND PROTOCOL   │  │ AQUARIUS GAUGE   │  │   VAULT    │
+│   (Lending)      │  │  (LP Rewards)    │  │  (Custody) │
+│                  │  │                  │  │            │
+│ Supply → bTokens │  │ Stake → AQUA     │  │ Safe Hold  │
+│   📊 5% APY      │  │   📊 9.5% APY    │  │   💰       │
+└──────────────────┘  └──────────────────┘  └────────────┘
 ```
 
-- **Backend**: Rust smart contract (1,292 lines) on Stellar Soroban
-- **Frontend**: Next.js 16 + React 19 + Tailwind CSS
-- **Blockchain**: Stellar Testnet (mainnet-ready)
+### Smart Contract Flow
 
-See detailed architecture: **[TECHNICAL_OVERVIEW.md](TECHNICAL_OVERVIEW.md)**
+```rust
+User Action: Sweep
+     ↓
+1. Check wallet balance
+2. Calculate: excess = balance - safety_limit
+3. If excess > 0:
+   ├─ Transfer excess to contract
+   ├─ Supply to Blend (get bTokens)
+   ├─ Stake bTokens in Aquarius
+   └─ Update user's invested balance
+4. Emit events for transparency
+```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Live Demo
+
+### Testnet Deployment
+
+- **Contract Address**: `CBSGX2SJQRPOMTDLA3W54V7XV3ALA7FN3G7VOTST55VLILVWUWJKD5XV`
+- **Network**: Stellar Testnet
+- **Explorer**: [View Contract](https://stellar.expert/explorer/testnet/contract/CBSGX2SJQRPOMTDLA3W54V7XV3ALA7FN3G7VOTST55VLILVWUWJKD5XV)
+
+### Quick Start Demo
+
+1. **Get Testnet XLM**: [Stellar Laboratory](https://laboratory.stellar.org/#account-creator)
+2. **Install Freighter**: [Chrome Extension](https://www.freighter.app/)
+3. **Run the app**:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/yield-sweep
+   cd yield-sweep
+   ./prepare-demo.sh
+   ```
+4. **Open**: http://localhost:3000
+5. **Connect wallet** and start earning! 🎉
+
+---
+
+## 💻 Tech Stack
+
+### Backend (Smart Contract)
+- **Language**: Rust 1.70+
+- **Framework**: Soroban SDK 21.0
+- **Lines of Code**: ~1,300 (production-ready)
+- **Test Coverage**: 8+ comprehensive unit tests
+- **Features**: Atomic operations, event logging, error handling
+
+### Frontend
+- **Framework**: Next.js 16 (App Router + Turbopack)
+- **Language**: TypeScript 5.0
+- **UI Library**: React 19
+- **Styling**: Tailwind CSS 4.0
+- **Animations**: Framer Motion 12
+- **Wallet**: Freighter API 6.0.1
+- **Blockchain**: Stellar SDK 14.5.0
+
+### Design System
+- **Typography**: Inter font family (400-900 weights)
+- **Color Palette**: Dark blue gradients, #3B82F6 primary
+- **UI Pattern**: Glassmorphism with animated gradients
+- **Responsive**: Mobile-first design
+
+---
+
+## 📦 Installation
 
 ### Prerequisites
-- Node.js 18+ 
-- pnpm (or npm)
-- Rust 1.70+
-- Soroban CLI
-- Freighter Wallet
 
-### Installation
+- Node.js 18+ and pnpm
+- Rust 1.70+ (for smart contract development)
+- Stellar CLI (soroban-cli)
+- Freighter wallet browser extension
+
+### Frontend Setup
 
 ```bash
-# 1. Install frontend dependencies
-cd Frontend
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/yield-sweep
+cd yield-sweep/Frontend
+
+# Install dependencies
 pnpm install
 
-# 2. Start development server
-pnpm dev
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your configuration
 
-# 3. Open http://localhost:3000
+# Run development server
+pnpm dev
 ```
 
-### Building the Smart Contract
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Smart Contract Setup
 
 ```bash
-# 1. Navigate to contract directory
-cd Backend/yield_sweep
+cd Backend
 
-# 2. Build for Soroban
+# Build the contract
 cargo build --target wasm32-unknown-unknown --release
 
-# 3. Deploy (testnet)
+# Run tests
+cargo test
+
+# Deploy to testnet (requires Stellar CLI)
 soroban contract deploy \
   --wasm target/wasm32-unknown-unknown/release/yield_sweep.wasm \
-  --network testnet \
-  --source YOUR_SECRET_KEY
+  --source YOUR_SECRET_KEY \
+  --network testnet
 ```
 
 ---
 
-## 📁 Project Structure
+## 📖 Usage
+
+### 1. Connect Your Wallet
+
+Click "Connect Wallet" and approve the Freighter connection.
+
+### 2. Set Your Safety Limit
+
+```
+Example: Set safety limit to 50 XLM
+├─ Your wallet has 150 XLM
+├─ 50 XLM stays liquid (for spending)
+└─ 100 XLM available to sweep into yield
+```
+
+Move the slider or enter an amount, then click "Update Safety Limit".
+
+### 3. Sweep Excess Funds
+
+Click the "Sweep" button. The contract will:
+1. Approve token spending (you sign once)
+2. Transfer excess funds to vault (you sign again)
+3. Invest in Blend + Aquarius protocols
+4. Show transaction hash - verify on Stellar Explorer
+
+### 4. Watch Your Earnings Grow
+
+The dashboard shows:
+- **Wallet Balance**: Your liquid funds (≥ safety limit)
+- **In Yield Vault**: Total deposited amount
+- **Invested in Blend**: Amount earning 5% APY
+- **Monthly Earnings**: Projected income at 14.5% APY
+
+### 5. Withdraw Anytime
+
+- **Partial Withdrawal**: Specify amount and withdraw
+- **Withdraw All**: One-click emergency exit
+
+All funds return to your wallet instantly - no lock-ups!
+
+---
+
+## 🔧 Development
+
+### Project Structure
 
 ```
 yield-sweep/
-├── Backend/
-│   └── yield_sweep/
-│       └── contracts/
-│           └── yield-sweep/
-│               └── src/
-│                   └── lib.rs          # Main contract (1,292 lines)
-├── Frontend/
+├── Backend/                    # Soroban smart contract
+│   ├── src/
+│   │   ├── lib.rs             # Main contract logic (1,292 lines)
+│   │   └── test.rs            # Unit tests
+│   ├── Cargo.toml
+│   └── test_snapshots/        # Test output verification
+│
+├── Frontend/                   # Next.js application
 │   ├── app/
-│   │   ├── page.tsx                    # Main application
-│   │   └── layout.tsx                  # Root layout
+│   │   ├── page.tsx           # Main app with routing
+│   │   ├── layout.tsx         # Root layout
+│   │   └── globals.css        # Global styles + animations
 │   ├── components/
-│   │   ├── views/                      # Landing, Dashboard
-│   │   ├── modals/                     # Deposit, Withdraw
-│   │   ├── DemoHelper.tsx              # Demo assistant
-│   │   └── TransactionNotification.tsx # Explorer links
+│   │   ├── views/
+│   │   │   ├── LandingView.tsx      # Hero page
+│   │   │   └── DashboardView.tsx    # Main dashboard
+│   │   ├── modals/
+│   │   │   ├── DepositModal.tsx
+│   │   │   └── WithdrawModal.tsx
+│   │   ├── dashboard/
+│   │   │   └── GrowthChart.tsx      # Earnings chart
+│   │   └── ui/                      # shadcn/ui components
 │   ├── hooks/
-│   │   └── useYieldVault.ts            # Blockchain logic (801 lines)
-│   └── constants.ts                    # Contract addresses
-├── DEMO_GUIDE.md                       # Comprehensive demo script
-├── TECHNICAL_OVERVIEW.md               # Architecture details
-└── prepare-demo.sh                     # One-click demo setup
+│   │   └── useYieldVault.ts         # Core blockchain logic
+│   └── lib/
+│       └── utils.ts
+│
+└── prepare-demo.sh             # One-click demo setup
 ```
 
----
+### Key Files Explained
 
-## 🔑 Key Components
+#### `Backend/src/lib.rs`
+The Soroban smart contract with these core functions:
+- `initialize()`: Set up contract state
+- `check_and_sweep()`: Main atomic sweep operation
+- `set_safety_limit()`: Store user's safety threshold
+- `deposit()`, `withdraw()`, `withdraw_all()`: Fund management
 
-### Smart Contract Functions
+#### `Frontend/hooks/useYieldVault.ts`
+React hook that:
+- Connects to Stellar Horizon/Soroban RPC
+- Manages wallet connection via Freighter
+- Handles all contract interactions
+- Provides error handling and loading states
 
-```rust
-// User functions
-pub fn set_safety_limit(e: Env, user: Address, limit: i128)
-pub fn sweep(e: Env, user: Address) -> i128
-pub fn check_and_sweep(e: Env, user: Address) -> (i128, i128) // Atomic
-pub fn deposit(e: Env, user: Address, amount: i128)
-pub fn withdraw(e: Env, user: Address, amount: i128)
-pub fn withdraw_all(e: Env, user: Address) -> i128
+#### `Frontend/components/views/DashboardView.tsx`
+Main dashboard showing:
+- Real-time balance fetching
+- Metric cards with animations
+- Action buttons (sweep, withdraw, etc.)
+- Transaction notifications
 
-// View functions
-pub fn get_user_config(e: Env, user: Address) -> UserConfig
-pub fn calculate_sweep_amount(e: Env, user: Address) -> i128
-```
-
-### Frontend Hook
-
-```typescript
-const {
-  balance,              // Real XLM balance from blockchain
-  vaultBalance,         // Amount in yield vault
-  safetyLimit,          // User's safety threshold
-  investedAmount,       // In Blend protocol
-  sweep,                // Execute sweep operation
-  withdrawAll,          // Emergency exit
-  transactionNotification, // With explorer links
-} = useYieldVault();
-```
-
----
-
-## 🎯 Live Demo Features
-
-### 🟢 Transaction Notifications
-Every action shows:
-- ✅ Transaction hash
-- ✅ Copy to clipboard button
-- ✅ Direct link to Stellar Explorer
-- ✅ Real-time status updates
-
-### 🟢 Demo Helper (Bottom Left)
-Quick access to:
-- Contract address + Explorer link
-- Your wallet address + Explorer link
-- Friendbot (testnet funding)
-- Demo tips for judges
-
-### 🟢 Real Blockchain Integration
-- All balances from Horizon API
-- Every transaction on Stellar testnet
-- Verifiable smart contract calls
-- No mock data or simulations
-
----
-
-## 📊 Performance Metrics
-
-| Metric | Value |
-|--------|-------|
-| Transaction Time | <5 seconds |
-| Gas Cost | ~$0.0001 per tx |
-| Throughput | 1000+ TPS |
-| Contract Size | ~50 KB |
-| APY | 14.5% (combined) |
-
----
-
-## 🔒 Security
-
-- ✅ **Non-custodial**: Users always control funds
-- ✅ **Audited patterns**: Based on Soroban best practices
-- ✅ **Emergency exits**: Instant withdrawal capability
-- ✅ **Safety limits**: Funds below threshold never touched
-- ✅ **Authentication**: All critical functions require signatures
-
----
-
-## 🧪 Testing
+### Running Tests
 
 ```bash
-# Run contract tests
-cd Backend/yield_sweep/contracts/yield-sweep
+# Smart contract tests
+cd Backend
 cargo test
 
-# Expected output:
-# test test_initialization ... ok
-# test test_set_safety_limit ... ok
-# test test_sweep ... ok
-# test test_withdraw ... ok
-# test test_withdraw_all ... ok
+# Frontend (if you add e2e tests)
+cd Frontend
+pnpm test
 ```
 
-**8+ comprehensive unit tests** covering:
-- Initialization
-- Safety limit configuration
-- Sweep calculations
-- Withdrawals
-- Edge cases
+### Building for Production
 
----
+```bash
+# Build smart contract
+cd Backend
+cargo build --release --target wasm32-unknown-unknown
 
-## 🌐 Contract Addresses (Testnet)
-
+# Build frontend
+cd Frontend
+pnpm build
+pnpm start
 ```
-Contract:      CBSGX2SJQRPOMTDLA3W54V7XV3ALA7FN3G7VOTST55VLILVWUWJKD5XV
-Token (XLM):   CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
-RPC:           https://soroban-testnet.stellar.org
-Network:       Test SDF Network ; September 2015
-```
-
-**View Contract:**
-https://stellar.expert/explorer/testnet/contract/CBSGX2SJQRPOMTDLA3W54V7XV3ALA7FN3G7VOTST55VLILVWUWJKD5XV
-
----
-
-## 🛣️ Roadmap
-
-### ✅ Phase 1 - Testnet (Current)
-- [x] Core sweep functionality
-- [x] Blend Protocol integration
-- [x] Aquarius liquid restaking
-- [x] Emergency withdrawals
-- [x] Beautiful UI with Explorer integration
-
-### 🚀 Phase 2 - Mainnet (Q2 2026)
-- [ ] Security audit
-- [ ] Mainnet deployment
-- [ ] Multi-asset support (USDC, EURC)
-- [ ] Gas optimizations
-- [ ] Advanced analytics
-
-### 🌟 Phase 3 - Advanced Features (Q3 2026)
-- [ ] AI-powered yield optimization
-- [ ] Cross-chain bridges
-- [ ] Automated rebalancing
-- [ ] Governance token
-- [ ] Mobile app
-
----
-
-## 📚 Documentation
-
-- **Demo Script**: [DEMO_GUIDE.md](DEMO_GUIDE.md) - Complete pitch walkthrough
-- **Technical Docs**: [TECHNICAL_OVERVIEW.md](TECHNICAL_OVERVIEW.md) - Architecture details
-- **Contract Code**: [Backend/yield_sweep/contracts/yield-sweep/src/lib.rs](Backend/yield_sweep/contracts/yield-sweep/src/lib.rs)
-- **Frontend Hook**: [Frontend/hooks/useYieldVault.ts](Frontend/hooks/useYieldVault.ts)
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please:
+We welcome contributions! Here's how:
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Commit your changes**: `git commit -m 'Add amazing feature'`
+4. **Push to branch**: `git push origin feature/amazing-feature`
+5. **Open a Pull Request**
+
+### Development Guidelines
+
+- Follow Rust best practices for smart contract code
+- Use TypeScript strictly (no `any` types)
+- Add tests for new features
+- Update documentation as needed
+- Follow the existing code style
+
+---
+
+## 🗺️ Roadmap
+
+### ✅ Phase 1: MVP (Current)
+- [x] Core smart contract with safety limits
+- [x] Blend Protocol integration (5% APY)
+- [x] Aquarius integration (9.5% APY)
+- [x] Responsive web frontend
+- [x] Testnet deployment
+- [x] Comprehensive testing
+
+### 🚧 Phase 2: Mainnet Launch (Q2 2026)
+- [ ] Security audit by CertiK or similar
+- [ ] Mainnet deployment
+- [ ] Gas optimization improvements
+- [ ] Multi-token support (USDC, USDT, etc.)
+- [ ] Advanced analytics dashboard
+
+### 🔮 Phase 3: Advanced Features (Q3 2026)
+- [ ] AI-powered yield optimization
+- [ ] Cross-chain bridges (Ethereum, Polygon)
+- [ ] Mobile app (iOS + Android)
+- [ ] Social features (referral program)
+- [ ] DAO governance for protocol parameters
+
+### 🌟 Phase 4: Ecosystem (Q4 2026)
+- [ ] SDK for third-party integrations
+- [ ] Yield aggregator marketplace
+- [ ] Insurance fund for user protection
+- [ ] Advanced portfolio management
+
+---
+
+## 🔒 Security
+
+### Audit Status
+- **Status**: Not yet audited (testnet only)
+- **Planned**: CertiK audit before mainnet launch
+
+### Best Practices
+- ✅ Non-custodial design (users control keys)
+- ✅ Emergency withdrawal mechanism
+- ✅ Comprehensive error handling
+- ✅ Event logging for transparency
+- ✅ Tested on testnet extensively
+
+### Security Considerations
+⚠️ **This is experimental software on testnet**
+- Do NOT use with real funds yet
+- No warranty or guarantee of funds
+- Smart contract risk exists
+- Use at your own risk
 
 ---
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details
-
----
-
-## 🔗 Links
-
-- **Stellar Docs**: https://developers.stellar.org
-- **Soroban Docs**: https://soroban.stellar.org
-- **Freighter Wallet**: https://www.freighter.app
-- **Stellar Expert**: https://stellar.expert
-- **Stellar Lab**: https://laboratory.stellar.org
-
----
-
-## 🎤 For Judges & Investors
-
-### Why Yield-Sweep?
-
-1. **Real Product**: Not a prototype - actual deployed contract on testnet
-2. **Technical Excellence**: 1,292 lines of production Rust code
-3. **Innovation**: First atomic liquid restaking on Stellar
-4. **User Experience**: Bank-like simplicity with DeFi yields
-5. **Verifiable**: Every transaction visible on blockchain
-
-### Key Differentiators
-
-| Feature | Yield-Sweep | Traditional DeFi |
-|---------|-------------|------------------|
-| Automation | Fully automated | Manual steps |
-| Liquidity | Instant access | Lock-up periods |
-| Complexity | Set & forget | Complex strategies |
-| APY | 14.5% | 3-8% |
-| Gas Costs | $0.0001 | $10-100 |
-
-### Contact
-
-- **Email**: your-email@example.com
-- **Twitter**: @YourHandle
-- **Demo**: http://localhost:3000 (run locally)
-- **Contract**: [View on Explorer](https://stellar.expert/explorer/testnet/contract/CBSGX2SJQRPOMTDLA3W54V7XV3ALA7FN3G7VOTST55VLILVWUWJKD5XV)
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ---
 
 ## 🙏 Acknowledgments
 
-Built with:
-- Stellar Soroban smart contract platform
-- Blend Protocol (lending)
-- Aquarius Protocol (gauges)
-- Freighter Wallet
-- Next.js & Tailwind CSS
+Built with amazing tools and protocols:
+
+- [Stellar](https://stellar.org) - Fast, low-cost blockchain
+- [Soroban](https://soroban.stellar.org) - Smart contract platform
+- [Blend Protocol](https://blend.capital) - Lending protocol
+- [Aquarius](https://aquarius.network) - Liquidity incentives
+- [Freighter](https://freighter.app) - Stellar wallet
+- [Next.js](https://nextjs.org) - React framework
+- [Tailwind CSS](https://tailwindcss.com) - Styling
+- [Framer Motion](https://framer.com/motion) - Animations
 
 ---
 
-**🚀 Ready to revolutionize DeFi savings?**
+## 📬 Contact & Links
 
-Start the demo: `./prepare-demo.sh`
+- **GitHub**: [github.com/YOUR_USERNAME/yield-sweep](https://github.com/YOUR_USERNAME/yield-sweep)
+- **Website**: Coming soon
+- **Twitter/X**: [@yourusername](https://twitter.com/yourusername)
+- **Discord**: Join our community (link coming soon)
+- **Email**: your.email@example.com
 
 ---
 
-<p align="center">
-  Made with ❤️ for the Stellar ecosystem
-</p>
+<div align="center">
+
+**Built with ❤️ for the Stellar ecosystem**
+
+⭐ Star this repo if you find it useful! ⭐
+
+</div>
